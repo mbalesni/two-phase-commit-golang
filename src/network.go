@@ -1,5 +1,7 @@
 package src
 
+import "fmt"
+
 type Network struct {
 	Processes   map[string]*Process
 	Coordinator *Process
@@ -40,6 +42,7 @@ func (n *Network) Cycle() {
 	for _, process := range n.Processes {
 		for process.SendQueue.queue.Len() > 0 {
 			message := process.SendQueue.Pop()
+			fmt.Println(message)
 			message.To.GetQueue.Add(message)
 		}
 	}

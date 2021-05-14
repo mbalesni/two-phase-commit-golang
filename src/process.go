@@ -10,6 +10,7 @@ type Message struct {
 	To               *Process
 	MessageType      string // one of VOTE-REQUEST|VOTE-COMMIT|VOTE-ABORT|GLOBAL-COMMIT|GLOBAL-ABORT|
 	TransactionValue int
+	History          []int
 }
 
 type Process struct {
@@ -68,6 +69,10 @@ func (p *Process) NewVoteMessage(to *Process, messageType string, transactionVal
 	return Message{From: p, To: to, MessageType: messageType, TransactionValue: transactionValue}
 }
 
+func (p *Process) NewRecoveryMessage(to *Process, messageType string, transactionValue int, history []int) Message {
+	return Message{From: p, To: to, MessageType: messageType, TransactionValue: transactionValue, History: history}
+}
+
 func (p *Process) AddDecision(decision string) {
 	p.OtherProcessesDecisions = append(p.OtherProcessesDecisions, decision)
 }
@@ -96,6 +101,19 @@ func (p *Process) RunGlobalAbort() {
 	}
 
 	p.Abort()
+}
+
+func (p *Process) RunRecovery() {
+	messageType := "RECOVERY-REQUEST"
+
+	// only sends to 1 other process
+	for _, target := range p.OtherProcesses {
+		if target.TimeFailure != true {
+			message := p.NewMessage(target, messageType)
+			p.SendQueue.Add(message)
+			break // breaks after first message
+		}
+	}
 }
 
 func (p *Process) PreCommit(transactionValue int) string {
@@ -179,7 +197,24 @@ func (p *Process) ProcessMessages() {
 					p.Abort()
 				}
 			}
+		case "RECOVERY-REQUEST":
+			{
+				if p.Verbose {
+					fmt.Println(p.Name, "got a RECOVERY-REQUEST from", message.From.Name)
+				}
+				responseMessage := p.NewRecoveryMessage(message.From, "RECOVER-RESPONSE", p.NextCommitValue, p.History)
+				p.SendQueue.Add(responseMessage)
+			}
+		case "RECOVERY-RESPONSE":
+			{
+				if p.Verbose {
+					fmt.Println(p.Name, "got a RECOVERY-RESPONSE from", message.From.Name)
+				}
+				p.NextCommitValue = message.TransactionValue
+				p.History = message.History
+			}
 		}
+
 	}
 }
 
