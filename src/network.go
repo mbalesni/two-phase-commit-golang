@@ -9,7 +9,7 @@ type Network struct {
 
 func SpawnNetwork(processes *[]*Process) *Network {
 
-	network := &Network{}
+	network := Network{}
 	network.Processes = make(map[string]*Process)
 	for _, process := range *processes {
 		process.Verbose = false
@@ -19,7 +19,7 @@ func SpawnNetwork(processes *[]*Process) *Network {
 
 	network.AutoDiscovery()
 
-	return network
+	return &network
 
 }
 
@@ -49,5 +49,31 @@ func (n *Network) Cycle() {
 
 	for _, process := range n.Processes {
 		process.Cycle()
+	}
+}
+
+func (n *Network) ListHistory() {
+
+	fmt.Println("Listing history")
+
+	for _, process := range n.Processes {
+		fmt.Println(process.Name, process.History)
+	}
+}
+
+func (n *Network) SetValue(value int) {
+
+	n.Coordinator.InitCommit(value)
+	for i := 0; i < 3; i++ {
+		n.Cycle()
+	}
+}
+
+func (n *Network) Rollback(value int) {
+
+	fmt.Println("Rolling back")
+
+	for _, process := range n.Processes {
+		process.History = process.History[:len(process.History)-value]
 	}
 }

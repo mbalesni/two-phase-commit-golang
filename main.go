@@ -1,309 +1,333 @@
 package main
 
-// import (
-// 	"time"
-// 	"two-phase-program/src"
+import (
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+	"two-phase-program/src"
+
+	prompt "github.com/c-bata/go-prompt"
+)
+
+var network *src.Network
+var processes []*src.Process
+
+func executor(in string) {
+
+	whitespaceSplit := strings.Fields(in)
+
+	if len(whitespaceSplit) == 0 {
+		return
+	}
+
+	if whitespaceSplit[0] != "Set-value" &&
+		whitespaceSplit[0] != "Rollback" &&
+		whitespaceSplit[0] != "Add" &&
+		whitespaceSplit[0] != "Remove" &&
+		whitespaceSplit[0] != "Time-failure" &&
+		whitespaceSplit[0] != "Arbitrary-failure" {
+
+		fmt.Println("Invalid command")
+
+	} else {
+
+		switch command := whitespaceSplit[0]; command {
+		case "Set-value":
+			{
+				if len(whitespaceSplit) != 2 {
+					fmt.Println("Set-value takes the next value as an argument")
+					return
+				} else {
+					value, err := strconv.Atoi(whitespaceSplit[1])
+					fmt.Println("Wants to set value:", value)
+					if err == nil {
+						network.SetValue(value)
+					} else {
+						return
+					}
+				}
+			}
+		case "Rollback":
+			{
+				if len(whitespaceSplit) != 2 {
+					fmt.Println("Rollback takes the number of steps to roll back by as an argument")
+				} else {
+					value, err := strconv.Atoi(whitespaceSplit[1])
+					fmt.Println("Wants to roll back by:", value)
+					if err == nil {
+						for _, process := range network.Processes {
+							if len(process.History) < value {
+								fmt.Println(fmt.Errorf("the system cannot reverse to that long state"))
+								return
+							}
+						}
+						network.Rollback(value)
+					}
+				}
+			}
+			// case "List":
+			// 	{
+			// if len(whitespaceSplit) != 1 {
+			// 	fmt.Println("List takes no argument")
+			// } else {
+			// 	network.List()
+			// }
+			// 	}
+			// case "Clock":
+			// 	{
+			// 		if len(whitespaceSplit) != 1 {
+			// 			fmt.Println("Clock takes no argument")
+			// 		} else {
+			// 			network.Clock()
+			// 		}
+			// 	}
+			// case "Set-time":
+			// 	{
+			// 		if len(whitespaceSplit) != 3 {
+			// 			fmt.Println("Set-time takes 2 arguments, the process id and the time hour:minute")
+			// 		} else {
+			// 			processId, err := strconv.ParseInt(whitespaceSplit[1], 10, 64)
+
+			// 			if err != nil {
+
+			// 				fmt.Println("Failed to parse process id")
+			// 			} else {
+			// 				_, exists := network.Processes[int(processId)]
+			// 				if !exists {
+			// 					fmt.Println("Process does not exist.")
+			// 					return
+			// 				}
+
+			// 				hourMinutes := strings.Split(whitespaceSplit[2], ":")
+
+			// 				if len(hourMinutes) != 2 {
 
-// 	"fmt"
-// 	"os"
-// 	"strconv"
-// 	"strings"
+			// 					fmt.Println("There cannot be more, or less, than 2 values delimited by :")
 
-// 	prompt "github.com/c-bata/go-prompt"
-// )
+			// 				} else {
 
-// var network *src.Network
+			// 					hours, err := strconv.ParseInt(hourMinutes[0], 10, 64)
 
-// func executor(in string) {
+			// 					if err != nil {
 
-// 	whitespaceSplit := strings.Fields(in)
+			// 						fmt.Println("Failed to parse the hours")
 
-// 	if len(whitespaceSplit) == 0 {
-// 		return
-// 	}
+			// 					} else {
 
-// 	if whitespaceSplit[0] != "Read" &&
-// 		whitespaceSplit[0] != "List" &&
-// 		whitespaceSplit[0] != "Clock" &&
-// 		whitespaceSplit[0] != "Kill" &&
-// 		whitespaceSplit[0] != "Set-time" &&
-// 		whitespaceSplit[0] != "Freeze" &&
-// 		whitespaceSplit[0] != "Unfreeze" &&
-// 		whitespaceSplit[0] != "Reload" {
+			// 						minutes, err := strconv.ParseInt(hourMinutes[1], 10, 64)
 
-// 		fmt.Println("Invalid command")
+			// 						if err != nil {
 
-// 	} else {
+			// 							fmt.Println("Failed to parse the minutes")
 
-// 		switch command := whitespaceSplit[0]; command {
-// 		case "Read":
-// 			{
-// 				if len(whitespaceSplit) != 2 {
+			// 						} else {
 
-// 					fmt.Println("Read takes one argument, a text file")
+			// 							network.SetTime(int(processId), src.Time{Hours: int(hours), Minutes: int(minutes)})
 
-// 				} else {
+			// 						}
+			// 					}
+			// 				}
+			// 			}
+			// 		}
+			// 	}
+			// case "Reload":
+			// 	{
+			// 		if len(whitespaceSplit) != 2 {
 
-// 					file_location := whitespaceSplit[1]
+			// 			fmt.Println("Read takes one argument, a text file")
 
-// 					file, err := src.Parse(file_location)
+			// 		} else {
 
-// 					if err != nil {
+			// 			file_location := whitespaceSplit[1]
 
-// 						fmt.Printf("Something bad happened whilst parsing", err)
+			// 			processes, err := src.Parse(file_location)
 
-// 					} else {
+			// 			if err != nil {
 
-// 						network = src.SpawnNetwork(file)
+			// 				fmt.Printf("Something bad happened whilst reloading", err)
 
-// 					}
+			// 			} else {
 
-// 				}
-// 			}
-// 		case "List":
-// 			{
-// 				if len(whitespaceSplit) != 1 {
-// 					fmt.Println("List takes no argument")
-// 				} else {
-// 					network.List()
-// 				}
-// 			}
-// 		case "Clock":
-// 			{
-// 				if len(whitespaceSplit) != 1 {
-// 					fmt.Println("Clock takes no argument")
-// 				} else {
-// 					network.Clock()
-// 				}
-// 			}
-// 		case "Set-time":
-// 			{
-// 				if len(whitespaceSplit) != 3 {
-// 					fmt.Println("Set-time takes 2 arguments, the process id and the time hour:minute")
-// 				} else {
-// 					processId, err := strconv.ParseInt(whitespaceSplit[1], 10, 64)
+			// 				network.Reload(processes)
 
-// 					if err != nil {
+			// 			}
+			// 		}
+			// 	}
+			// case "Freeze":
+			// 	{
+			// 		if len(whitespaceSplit) != 2 {
 
-// 						fmt.Println("Failed to parse process id")
-// 					} else {
-// 						_, exists := network.Processes[int(processId)]
-// 						if !exists {
-// 							fmt.Println("Process does not exist.")
-// 							return
-// 						}
+			// 			fmt.Println("Freeze takes one argument, a processId")
 
-// 						hourMinutes := strings.Split(whitespaceSplit[2], ":")
+			// 		} else {
 
-// 						if len(hourMinutes) != 2 {
+			// 			processId, err := strconv.ParseInt(whitespaceSplit[1], 10, 64)
 
-// 							fmt.Println("There cannot be more, or less, than 2 values delimited by :")
+			// 			if err != nil {
 
-// 						} else {
+			// 				fmt.Println("Failed to parse process id")
+			// 			} else {
+			// 				_, exists := network.Processes[int(processId)]
+			// 				if !exists {
+			// 					fmt.Println("Process does not exist.")
+			// 					return
+			// 				}
 
-// 							hours, err := strconv.ParseInt(hourMinutes[0], 10, 64)
+			// 				network.Freeze(int(processId))
 
-// 							if err != nil {
+			// 			}
 
-// 								fmt.Println("Failed to parse the hours")
+			// 		}
+			// 	}
+			// case "Unfreeze":
+			// 	{
+			// 		if len(whitespaceSplit) != 2 {
 
-// 							} else {
+			// 			fmt.Println("Unfreeze takes one argument, a processId")
 
-// 								minutes, err := strconv.ParseInt(hourMinutes[1], 10, 64)
+			// 		} else {
 
-// 								if err != nil {
+			// 			processId, err := strconv.ParseInt(whitespaceSplit[1], 10, 64)
 
-// 									fmt.Println("Failed to parse the minutes")
+			// 			if err != nil {
 
-// 								} else {
+			// 				fmt.Println("Failed to parse process id")
+			// 			} else {
+			// 				_, exists := network.Processes[int(processId)]
+			// 				if !exists {
+			// 					fmt.Println("Process does not exist.")
+			// 					return
+			// 				}
+			// 				network.Unfreeze(int(processId))
 
-// 									network.SetTime(int(processId), src.Time{Hours: int(hours), Minutes: int(minutes)})
+			// 			}
 
-// 								}
-// 							}
-// 						}
-// 					}
-// 				}
-// 			}
-// 		case "Reload":
-// 			{
-// 				if len(whitespaceSplit) != 2 {
+			// 		}
+			// 	}
 
-// 					fmt.Println("Read takes one argument, a text file")
+			// case "Kill":
+			// 	{
+			// 		if len(whitespaceSplit) != 2 {
 
-// 				} else {
+			// 			fmt.Println("Kill takes one argument, a processId")
 
-// 					file_location := whitespaceSplit[1]
+			// 		} else {
 
-// 					processes, err := src.Parse(file_location)
+			// 			processId, err := strconv.ParseInt(whitespaceSplit[1], 10, 64)
 
-// 					if err != nil {
+			// 			if err != nil {
 
-// 						fmt.Printf("Something bad happened whilst reloading", err)
+			// 				fmt.Println("Failed to parse process id")
+			// 			} else {
+			// 				_, exists := network.Processes[int(processId)]
+			// 				if !exists {
+			// 					fmt.Println("Process does not exist.")
+			// 					return
+			// 				}
+			// 				network.Kill(int(processId))
 
-// 					} else {
+			// 			}
+			// 		}
+			// 	}
+		}
+		network.ListHistory()
+	}
+}
 
-// 						network.Reload(processes)
+func completer(in prompt.Document) []prompt.Suggest {
+	s := []prompt.Suggest{
+		{Text: "Set-value", Description: "Commit a new value to the system"},
+		{Text: "Rollback", Description: "Roll back to previous values"},
+		{Text: "Add", Description: "Add a new process participant to the system"},
+		{Text: "Remove", Description: "Remove a process from the system"},
+		{Text: "Time-failure", Description: "Kills the node (for S seconds)"},
+		{Text: "Arbitrary-failure", Description: "Swaps node's response to commit requests (for S seconds)"},
+	}
+	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
+}
 
-// 					}
-// 				}
-// 			}
-// 		case "Freeze":
-// 			{
-// 				if len(whitespaceSplit) != 2 {
+func main() {
 
-// 					fmt.Println("Freeze takes one argument, a processId")
+	if len(os.Args) < 2 {
 
-// 				} else {
+		fmt.Println("No argument given")
+		os.Exit(1)
 
-// 					processId, err := strconv.ParseInt(whitespaceSplit[1], 10, 64)
+	} else {
 
-// 					if err != nil {
+		parsedArgs := strings.TrimSpace(os.Args[1])
 
-// 						fmt.Println("Failed to parse process id")
-// 					} else {
-// 						_, exists := network.Processes[int(processId)]
-// 						if !exists {
-// 							fmt.Println("Process does not exist.")
-// 							return
-// 						}
+		if strings.HasSuffix(parsedArgs, ".txt") {
 
-// 						network.Freeze(int(processId))
+			// TODO: parse from file
 
-// 					}
+			processes = append(processes, src.NewProcess("P1", true))
+			processes = append(processes, src.NewProcess("P2", true))
+			processes = append(processes, src.NewProcess("P3", true))
+			processes = append(processes, src.NewProcess("P4", true))
 
-// 				}
-// 			}
-// 		case "Unfreeze":
-// 			{
-// 				if len(whitespaceSplit) != 2 {
+			network = src.SpawnNetwork(&processes)
+			network.Coordinator = (processes)[3]
 
-// 					fmt.Println("Unfreeze takes one argument, a processId")
+			// file_location := whitespaceSplit[1]
 
-// 				} else {
+			// file, err := src.Parse(file_location)
 
-// 					processId, err := strconv.ParseInt(whitespaceSplit[1], 10, 64)
+			// if err != nil {
 
-// 					if err != nil {
+			// 	fmt.Printf("Something bad happened whilst parsing", err)
 
-// 						fmt.Println("Failed to parse process id")
-// 					} else {
-// 						_, exists := network.Processes[int(processId)]
-// 						if !exists {
-// 							fmt.Println("Process does not exist.")
-// 							return
-// 						}
-// 						network.Unfreeze(int(processId))
+			// } else {
 
-// 					}
+			// 	network = src.SpawnNetwork(file)
 
-// 				}
-// 			}
+			// }
 
-// 		case "Kill":
-// 			{
-// 				if len(whitespaceSplit) != 2 {
+			// // Synchronizing
+			// go func() {
+			// 	for {
+			// 		select {
+			// 		case <-timer1.C:
+			// 			{
+			// 				//fmt.Println("Berkleying")
+			// 				network.Berkley()
+			// 			}
+			// 		}
+			// 	}
+			// }()
 
-// 					fmt.Println("Kill takes one argument, a processId")
+			// go func() {
+			// 	for {
+			// 		select {
+			// 		case <-timer2.C:
+			// 			//fmt.Println("Time-ing")
+			// 			tempCurrentTime := src.CurrentTime()
+			// 			diff := currentTime.Distance(tempCurrentTime)
+			// 			// Clock ticking
+			// 			for _, process := range network.Processes {
 
-// 				} else {
+			// 				process.SyncTime(diff)
 
-// 					processId, err := strconv.ParseInt(whitespaceSplit[1], 10, 64)
+			// 			}
+			// 			currentTime = tempCurrentTime
 
-// 					if err != nil {
+			// 		}
+			// 	}
+			// }()
 
-// 						fmt.Println("Failed to parse process id")
-// 					} else {
-// 						_, exists := network.Processes[int(processId)]
-// 						if !exists {
-// 							fmt.Println("Process does not exist.")
-// 							return
-// 						}
-// 						network.Kill(int(processId))
+			p := prompt.New(
+				executor,
+				completer,
+				prompt.OptionPrefix("λ "),
+				prompt.OptionTitle("prompt for Huber's take on 2PC"),
+			)
+			p.Run()
+		} else {
 
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// }
+			fmt.Println("Please provide a .txt file")
+			os.Exit(1)
 
-// func completer(in prompt.Document) []prompt.Suggest {
-// 	s := []prompt.Suggest{
-// 		{Text: "List", Description: "List all processes"},
-// 		{Text: "Clock", Description: "List all processes' clocks"},
-// 		{Text: "Set-time", Description: "Sets time of a process"},
-// 		{Text: "Reload", Description: "Reloads file, needs file location"},
-// 		{Text: "Freeze", Description: "Freeze a process"},
-// 		{Text: "Unfreeze", Description: "Unfreezes a process"},
-// 		{Text: "Kill", Description: "Murders a process"},
-// 	}
-// 	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
-// }
-
-// func main() {
-
-// 	if len(os.Args) < 2 {
-
-// 		fmt.Println("No argument given")
-// 		os.Exit(1)
-
-// 	} else {
-
-// 		parsedArgs := strings.TrimSpace(os.Args[1])
-
-// 		if strings.HasSuffix(parsedArgs, ".txt") {
-
-// 			currentTime := src.CurrentTime()
-// 			executor(fmt.Sprintf("Read %s", parsedArgs))
-
-// 			timer1 := time.NewTicker(5 * time.Second)
-// 			timer2 := time.NewTicker(1 * time.Minute)
-
-// 			// Synchronizing
-// 			go func() {
-// 				for {
-// 					select {
-// 					case <-timer1.C:
-// 						{
-// 							//fmt.Println("Berkleying")
-// 							network.Berkley()
-// 						}
-// 					}
-// 				}
-// 			}()
-
-// 			go func() {
-// 				for {
-// 					select {
-// 					case <-timer2.C:
-// 						//fmt.Println("Time-ing")
-// 						tempCurrentTime := src.CurrentTime()
-// 						diff := currentTime.Distance(tempCurrentTime)
-// 						// Clock ticking
-// 						for _, process := range network.Processes {
-
-// 							process.SyncTime(diff)
-
-// 						}
-// 						currentTime = tempCurrentTime
-
-// 					}
-// 				}
-// 			}()
-
-// 			p := prompt.New(
-// 				executor,
-// 				completer,
-// 				prompt.OptionPrefix("λ "),
-// 				prompt.OptionTitle("prompt for huber's take on bully + berkley"),
-// 			)
-// 			p.Run()
-// 		} else {
-
-// 			fmt.Println("Please provide a .txt file")
-// 			os.Exit(1)
-
-// 		}
-// 	}
-// }
+		}
+	}
+}

@@ -12,13 +12,12 @@ What's implemented:
 - [X] Core Commit Process (see `network_test.go`)
 - [ ] Synchronization after node failure
 - [ ] Operations
-  - [ ] Set-Value
-  - [ ] Rollback
+  - [X] Set-Value
+  - [X] Rollback
   - [ ] Add
   - [ ] Remove
   - [ ] Time-failure
   - [ ] Arbitraty-failure
-  - [ ] Reload
 - [ ] Error messages
 - [ ] Loading from file
 - [ ] CLI 
