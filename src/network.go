@@ -13,7 +13,6 @@ func SpawnNetwork(processes []*Process) *Network {
 	network.Processes = make(map[string]*Process)
 	for _, process := range processes {
 		process.Verbose = false
-		process.Init()
 		network.Processes[process.Name] = process
 	}
 
@@ -24,12 +23,9 @@ func SpawnNetwork(processes []*Process) *Network {
 }
 
 func (n *Network) AutoDiscovery() {
-	// populate LowerProcesses and HigherProcesses for each process
 	for _, currentProcess := range n.Processes {
 		for _, targetProcess := range n.Processes {
-
 			_, alreadyIn := currentProcess.OtherProcesses[targetProcess.Name]
-
 			if !alreadyIn && currentProcess.Name != targetProcess.Name {
 				currentProcess.OtherProcesses[targetProcess.Name] = targetProcess
 			}
@@ -62,17 +58,21 @@ func (n *Network) ListHistory() {
 }
 
 func (n *Network) OperationSetValue(value int) {
-
 	n.Coordinator.SendVoteRequestMessages("add", value)
-	for i := 0; i < 3; i++ {
-		n.Cycle()
-	}
+	// Send VOTE REQUEST
+	n.Cycle()
+	// Reason about whether anyone sent VOTE-COMMIT or VOTE-ABORT and send GLOBAL-COMMIT or GLOBAL-ABORT
+	n.Cycle()
+	// Consume GLOBAL-COMMIT or GLOBAL-ABORT
+	n.Cycle()
 }
 
 func (n *Network) OperationRollback(steps int) {
-
 	n.Coordinator.SendVoteRequestMessages("rollback", steps)
-	for i := 0; i < 3; i++ {
-		n.Cycle()
-	}
+	// Send VOTE REQUEST
+	n.Cycle()
+	// Reason about whether anyone sent VOTE-COMMIT or VOTE-ABORT and send GLOBAL-COMMIT or GLOBAL-ABORT
+	n.Cycle()
+	// Consume GLOBAL-COMMIT or GLOBAL-ABORT
+	n.Cycle()
 }

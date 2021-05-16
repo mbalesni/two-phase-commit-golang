@@ -43,7 +43,7 @@ func Parse(input string) (*Network, error) {
 			currentLine = strings.TrimSpace(currentLine)
 			currentLine = strings.ReplaceAll(currentLine, " ", "")
 
-			if header == "System" {
+			if header == "System"{
 
 				if strings.Contains(currentLine, "Coordinator") {
 
@@ -59,9 +59,13 @@ func Parse(input string) (*Network, error) {
 
 				} else {
 
-					newProcess := NewProcess(currentLine, false)
+					if currentLine != "" {
 
-					processes = append(processes, newProcess)
+						newProcess := NewProcess(currentLine, false)
+
+						processes = append(processes, newProcess)
+
+					}
 
 				}
 

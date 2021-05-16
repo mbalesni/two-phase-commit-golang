@@ -69,7 +69,8 @@ func (p *Process) Commit() {
 // Abort when aborting we rollback the changes and go back to the "init" stage
 func (p *Process) Abort() {
 	p.State = "init"
-	p.Log = p.UndoLog // TODO: maybe also set Undo Log to nil
+	p.Log = p.UndoLog
+	p.UndoLog = nil
 }
 
 func (p *Process) ProcessMessages() {
