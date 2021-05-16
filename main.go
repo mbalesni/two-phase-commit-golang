@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	prompt "github.com/c-bata/go-prompt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 	"two-phase-program/src"
+
+	prompt "github.com/c-bata/go-prompt"
+	log "github.com/sirupsen/logrus"
 )
 
 var network *src.Network
@@ -42,7 +42,7 @@ func executor(in string) {
 					value, err := strconv.Atoi(whitespaceSplit[1])
 					fmt.Println("Wants to set value:", value)
 					if err == nil {
-						network.SetValue(value)
+						network.OperationSetValue(value)
 					} else {
 						return
 					}
@@ -57,12 +57,12 @@ func executor(in string) {
 					fmt.Println("Wants to roll back by:", value)
 					if err == nil {
 						for _, process := range network.Processes {
-							if len(process.History) < value {
+							if len(process.Log) < value {
 								fmt.Println(fmt.Errorf("the system cannot reverse to that long state"))
 								return
 							}
 						}
-						network.Rollback(value)
+						network.OperationRollback(value)
 					}
 				}
 			}
@@ -262,7 +262,8 @@ func main() {
 
 			// TODO: parse from file
 
-			network, err := src.Parse(parsedArgs)
+			var err error
+			network, err = src.Parse(parsedArgs)
 
 			if err != nil {
 				log.Fatalf("failed to read file %v", err)

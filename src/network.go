@@ -1,5 +1,7 @@
 package src
 
+import "fmt"
+
 type Network struct {
 	Processes   map[string]*Process
 	Coordinator *Process
@@ -21,8 +23,6 @@ func SpawnNetwork(processes []*Process) *Network {
 
 }
 
-
-
 func (n *Network) AutoDiscovery() {
 	// populate LowerProcesses and HigherProcesses for each process
 	for _, currentProcess := range n.Processes {
@@ -38,8 +38,6 @@ func (n *Network) AutoDiscovery() {
 	}
 }
 
-/*
-
 func (n *Network) Cycle() {
 	for _, process := range n.Processes {
 		for process.SendQueue.queue.Len() > 0 {
@@ -50,7 +48,7 @@ func (n *Network) Cycle() {
 	}
 
 	for _, process := range n.Processes {
-		process.Cycle()
+		process.ProcessMessages()
 	}
 }
 
@@ -63,12 +61,18 @@ func (n *Network) ListHistory() {
 	}
 }
 
-func (n *Network) SetValue(value int) {
+func (n *Network) OperationSetValue(value int) {
 
-	n.Coordinator.InitCommit(value)
+	n.Coordinator.SendVoteRequestMessages("add", value)
 	for i := 0; i < 3; i++ {
 		n.Cycle()
 	}
 }
 
- */
+func (n *Network) OperationRollback(steps int) {
+
+	n.Coordinator.SendVoteRequestMessages("rollback", steps)
+	for i := 0; i < 3; i++ {
+		n.Cycle()
+	}
+}

@@ -1,5 +1,12 @@
 package src
 
+import (
+	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
 // func GetProcessIdxById(id int, processes []*Process) int {
 // 	for i, process := range processes {
 // 		if process.Id == id {
@@ -8,7 +15,7 @@ package src
 // 	}
 // 	return -1
 // }
-/*
+
 func TestSpawn(t *testing.T) {
 	//verbose := true
 
@@ -27,34 +34,34 @@ func TestSpawn(t *testing.T) {
 	processes = append(processes, NewProcess("P3", true))
 	processes = append(processes, NewProcess("P4", true))
 
-	network := SpawnNetwork(&processes)
+	network := SpawnNetwork(processes)
 	network.Coordinator = (processes)[3]
 
-	for _, process := range processes {
+	for _, process := range network.Processes {
 
 		assert.Equal(t, 3, len(process.OtherProcesses))
 
 	}
 
-	network.Coordinator.InitCommit(5)
+	network.OperationSetValue(5)
 
-	assert.Equal(t, 0, len(network.Coordinator.History), "no values should be commited on start")
+	// assert.Equal(t, 0, len(network.Coordinator.Log), "no values should be commited on start")
 
-	network.Cycle()
-	network.Cycle()
-	network.Cycle()
+	// network.Cycle()
+	// network.Cycle()
+	// network.Cycle()
 
 	for _, process := range processes {
-		assert.Equal(t, 1, len(process.History), "a value should be commited after the 3rd network cycle")
-		assert.Equal(t, 5, process.History[0], "the correct value should be commited to all participants")
+		assert.Equal(t, 1, len(process.Log), "a value should be commited after the 3rd network cycle")
+		assert.Equal(t, 5, process.Log[0], "the correct value should be commited to all participants")
 
-		fmt.Println(process.History)
+		fmt.Println(process.Log)
 
 	}
 
 }
 
-// TODO: add "block" noticing via timeout,
+// TODO: maybe add "block" noticing via timeout,
 // so that network can continue to operate
 // even when a node is unreachable
 
@@ -91,6 +98,3 @@ func TestSpawn(t *testing.T) {
 // 	}
 
 // }
-
-
- */
