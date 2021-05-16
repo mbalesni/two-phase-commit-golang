@@ -17,6 +17,7 @@ type Process struct {
 	Log                     []int
 	UndoLog                 []int
 	OtherProcesses          map[string]*Process
+	UndoOtherProcesses 		map[string]*Process
 	OtherProcessesDecisions []string
 }
 
@@ -37,13 +38,14 @@ func (p *Process) Init() {
 }
 
 // PreCommit when the coordinator sends VoteRequest to all, then PreCommit happens.
-func (p *Process) PreCommit(operation string, value int, history []int) string {
+func (p *Process) PreCommit(operation string, value int, history []int, processName string) string {
 	if p.ArbitraryFailure {
 		p.State = "init"
 		return "VOTE-ABORT"
 	}
 
 	p.UndoLog = p.Log
+	p.UndoOtherProcesses = p.OtherProcesses
 
 	switch operation {
 	case "add":
@@ -58,6 +60,10 @@ func (p *Process) PreCommit(operation string, value int, history []int) string {
 		{
 			p.Log = history
 		}
+	case "remove":
+		{
+			delete(p.OtherProcesses, processName)
+		}
 	}
 
 	p.State = "ready"
@@ -67,6 +73,7 @@ func (p *Process) PreCommit(operation string, value int, history []int) string {
 // Commit when commiting we do not rollback the changes and instead only delete the undo log.
 func (p *Process) Commit() {
 	p.UndoLog = nil
+	p.UndoOtherProcesses = nil
 	p.State = "init"
 }
 
@@ -75,6 +82,10 @@ func (p *Process) Abort() {
 	p.State = "init"
 	p.Log = p.UndoLog
 	p.UndoLog = nil
+	if p.UndoOtherProcesses != nil {
+		p.OtherProcesses = p.UndoOtherProcesses
+		p.UndoOtherProcesses = nil
+	}
 }
 
 func (p *Process) ProcessMessages() {
@@ -90,7 +101,7 @@ func (p *Process) ProcessMessages() {
 					fmt.Println("P=", p.Name, "got a VOTE-REQUEST from", message.From.Name)
 				}
 
-				decision := p.PreCommit(message.Operation, message.TransactionValue, message.History)
+				decision := p.PreCommit(message.Operation, message.TransactionValue, message.History, "")
 				responseMessage := p.NewMessage(message.From, decision)
 				p.SendQueue.Add(responseMessage)
 			}

@@ -2,14 +2,10 @@ package src
 
 import "fmt"
 
-func (p *Process) SendVoteRequestMessages(operation string, transactionValue int) {
+func (p *Process) SendVoteRequestMessages(operation string, transactionValue int, processName string) {
 
-	p.PreCommitCoordinator(operation, transactionValue)
+	p.PreCommitCoordinator(operation, transactionValue, processName)
 
-	// hacky solution:
-	// don't send any messages if some process has TimeFailure.
-	// We can only do it this way
-	// because "processes" are simulated.
 	for _, target := range p.OtherProcesses {
 		if target.TimeFailure {
 			fmt.Println("Node", target.Name, "is unreachable. Aborting.")
@@ -22,6 +18,8 @@ func (p *Process) SendVoteRequestMessages(operation string, transactionValue int
 
 		if operation == "synchronize" {
 			message = p.NewFirstPhaseSynchronizationMessage(target, "VOTE-REQUEST", p.Log)
+		} else if operation == "remove" && target.Name != processName {
+			message = p.NewFirstPhaseRemoveMessage(target, "VOTE-REQUEST", processName)
 		} else {
 			message = p.NewFirstPhaseMessage(target, "VOTE-REQUEST", operation, transactionValue)
 		}
@@ -45,9 +43,10 @@ func (p *Process) SendGlobalCommitMessages() {
 }
 
 // PreCommit when the coordinator sends VoteRequest to all, then PreCommit happens.
-func (p *Process) PreCommitCoordinator(operation string, value int) {
+func (p *Process) PreCommitCoordinator(operation string, value int, processName string) {
 
 	p.UndoLog = p.Log
+	p.UndoOtherProcesses = p.OtherProcesses
 
 	switch operation {
 	case "add":
@@ -61,6 +60,10 @@ func (p *Process) PreCommitCoordinator(operation string, value int) {
 	case "synchronize":
 		{
 			p.Log = p.Log
+		}
+	case "remove":
+		{
+			delete(p.OtherProcesses, processName)
 		}
 	}
 
