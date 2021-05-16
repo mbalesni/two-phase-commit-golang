@@ -57,7 +57,7 @@ func (n *Network) ListHistory() {
 	fmt.Println("Listing history")
 
 	for _, process := range n.Processes {
-		fmt.Println(process.Name, process.History)
+		fmt.Println(process.Name, process.Log)
 	}
 }
 
@@ -66,15 +66,5 @@ func (n *Network) SetValue(value int) {
 	n.Coordinator.InitCommit(value)
 	for i := 0; i < 3; i++ {
 		n.Cycle()
-	}
-}
-
-// TODO: make it go through the 2PC protocol
-func (n *Network) Rollback(value int) {
-
-	fmt.Println("Rolling back")
-
-	for _, process := range n.Processes {
-		process.History = process.History[:len(process.History)-value]
 	}
 }

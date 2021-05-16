@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
+	prompt "github.com/c-bata/go-prompt"
 	"os"
 	"strconv"
 	"strings"
 	"two-phase-program/src"
-
-	prompt "github.com/c-bata/go-prompt"
 )
 
 var network *src.Network
