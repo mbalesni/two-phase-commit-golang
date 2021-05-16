@@ -1,7 +1,6 @@
 package src
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -35,6 +34,8 @@ func (p *Process) Init() {
 	p.SendQueue.Init()
 	p.GetQueue.Init()
 }
+
+/*
 
 // PreCommit when the coordinator sends VoteRequest to all, then PreCommit happens.
 func (p *Process) PreCommit(operation string, value int) string {
@@ -160,7 +161,10 @@ func (p *Process) ProcessMessages(operation string, value int) {
 
 					}
 
-			*/
+
 		}
 	}
+
 }
+
+ */

@@ -3,14 +3,15 @@ package main
 import (
 	"fmt"
 	prompt "github.com/c-bata/go-prompt"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 	"two-phase-program/src"
 )
 
 var network *src.Network
-var processes []*src.Process
 
 func executor(in string) {
 
@@ -261,27 +262,11 @@ func main() {
 
 			// TODO: parse from file
 
-			processes = append(processes, src.NewProcess("P1", true))
-			processes = append(processes, src.NewProcess("P2", true))
-			processes = append(processes, src.NewProcess("P3", true))
-			processes = append(processes, src.NewProcess("P4", true))
+			network, err := src.Parse(parsedArgs)
 
-			network = src.SpawnNetwork(&processes)
-			network.Coordinator = (processes)[3]
-
-			// file_location := whitespaceSplit[1]
-
-			// file, err := src.Parse(file_location)
-
-			// if err != nil {
-
-			// 	fmt.Printf("Something bad happened whilst parsing", err)
-
-			// } else {
-
-			// 	network = src.SpawnNetwork(file)
-
-			// }
+			if err != nil {
+				log.Fatalf("failed to read file %v", err)
+			}
 
 			// // Synchronizing
 			// go func() {

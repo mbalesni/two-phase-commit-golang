@@ -1,5 +1,7 @@
 package src
 
+/*
+
 func (p *Process) SendVoteRequestMessages(transactionValue int) {
 
 	decision := "VOTE-REQUEST"
@@ -30,3 +32,5 @@ func (p *Process) SendGlobalCommitMessages() {
 func (p *Process) AddDecision(decision string) {
 	p.OtherProcessesDecisions = append(p.OtherProcessesDecisions, decision)
 }
+
+ */

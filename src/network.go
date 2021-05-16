@@ -1,17 +1,15 @@
 package src
 
-import "fmt"
-
 type Network struct {
 	Processes   map[string]*Process
 	Coordinator *Process
 }
 
-func SpawnNetwork(processes *[]*Process) *Network {
+func SpawnNetwork(processes []*Process) *Network {
 
 	network := Network{}
 	network.Processes = make(map[string]*Process)
-	for _, process := range *processes {
+	for _, process := range processes {
 		process.Verbose = false
 		process.Init()
 		network.Processes[process.Name] = process
@@ -22,6 +20,8 @@ func SpawnNetwork(processes *[]*Process) *Network {
 	return &network
 
 }
+
+
 
 func (n *Network) AutoDiscovery() {
 	// populate LowerProcesses and HigherProcesses for each process
@@ -37,6 +37,8 @@ func (n *Network) AutoDiscovery() {
 		}
 	}
 }
+
+/*
 
 func (n *Network) Cycle() {
 	for _, process := range n.Processes {
@@ -68,3 +70,5 @@ func (n *Network) SetValue(value int) {
 		n.Cycle()
 	}
 }
+
+ */
