@@ -18,7 +18,7 @@ type Process struct {
 	GetQueue                MessageQueue
 	History                 []int
 	Name                    string
-	NextCommitValue         int
+	NextHistory             []int
 	OtherProcesses          map[string]*Process
 	OtherProcessesDecisions []string
 	SendQueue               MessageQueue
@@ -41,8 +41,11 @@ func NewProcess(name string, verbose bool) *Process {
 
 func (p *Process) InitCommit(transactionValue int) {
 	p.State = "wait"
-	p.NextCommitValue = transactionValue
+	p.NextCommitValue = transactionValue // TODO: replace "nextcommitvalue" logic with "nexthistory" logic
 
+	// TODO: instead of sending messages immediately
+	// let's check if any process has TimeFailure.
+	// If so, just don't initiate the commit and fail immediately.
 	for _, target := range p.OtherProcesses {
 		if target.TimeFailure != true {
 			message := p.NewVoteMessage(target, "VOTE-REQUEST", transactionValue)
@@ -155,6 +158,7 @@ func (p *Process) ProcessMessages() {
 					fmt.Println(p.Name, " did not request a commit. Something is wrong!")
 				} else {
 					p.AddDecision(message.MessageType)
+					// TODO: fix by comparing # responses to actual # of requests instead of total # of processes
 					if len(p.OtherProcessesDecisions) == len(p.OtherProcesses) {
 						p.OtherProcessesDecisions = []string{}
 						p.RunGlobalCommit()

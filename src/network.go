@@ -69,6 +69,7 @@ func (n *Network) SetValue(value int) {
 	}
 }
 
+// TODO: make it go through the 2PC protocol
 func (n *Network) Rollback(value int) {
 
 	fmt.Println("Rolling back")
