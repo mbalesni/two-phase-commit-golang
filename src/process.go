@@ -37,7 +37,7 @@ func (p *Process) Init() {
 }
 
 // PreCommit when the coordinator sends VoteRequest to all, then PreCommit happens.
-func (p *Process) PreCommit(operation string, value int) string {
+func (p *Process) PreCommit(operation string, value int, history []int) string {
 	if p.ArbitraryFailure {
 		p.State = "init"
 		return "VOTE-ABORT"
@@ -53,6 +53,10 @@ func (p *Process) PreCommit(operation string, value int) string {
 	case "rollback":
 		{
 			p.Log = p.Log[0:(len(p.Log) - value)]
+		}
+	case "synchronize":
+		{
+			p.Log = history
 		}
 	}
 
@@ -85,7 +89,8 @@ func (p *Process) ProcessMessages() {
 				if p.Verbose {
 					fmt.Println("P=", p.Name, "got a VOTE-REQUEST from", message.From.Name)
 				}
-				decision := p.PreCommit(message.Operation, message.TransactionValue)
+
+				decision := p.PreCommit(message.Operation, message.TransactionValue, message.History)
 				responseMessage := p.NewMessage(message.From, decision)
 				p.SendQueue.Add(responseMessage)
 			}
@@ -145,31 +150,6 @@ func (p *Process) ProcessMessages() {
 					p.Abort()
 				}
 			}
-
-			// // From Coordinator to Participants
-			// case "SYNCHRONIZE-REQUEST":
-			// 	{
-			// 		if p.Verbose {
-			// 			fmt.Println(p.Name, "got a SYNCHRONIZE-REQUEST from", message.From.Name)
-			// 		}
-			// 		responseMessage := p.NewRecoveryMessage(message.From, "SYNCHRONIZE-RESPONSE", p.NextCommitValue, p.History)
-			// 		p.SendQueue.Add(responseMessage)
-			// 	}
-			// // From Participants to Coordinator
-			// case "SYNCHRONIZE-RESPONSE":
-			// 	{
-			// 		if p.Verbose {
-			// 			fmt.Println(p.Name, "got a RECOVERY-RESPONSE from", message.From.Name)
-			// 		}
-			// 		p.NextCommitValue = message.TransactionValue
-			// 		p.History = message.History
-			// 	}
-			// // From Coordinator to Participants
-			// case "GLOBAL-SYNCHRONIZE":
-			// 	{
-
-			// 	}
-
 		}
 	}
 }

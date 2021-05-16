@@ -56,23 +56,3 @@ func (n *Network) ListHistory() {
 		fmt.Println(process.Name, process.Log)
 	}
 }
-
-func (n *Network) OperationSetValue(value int) {
-	n.Coordinator.SendVoteRequestMessages("add", value)
-	// Send VOTE REQUEST
-	n.Cycle()
-	// Reason about whether anyone sent VOTE-COMMIT or VOTE-ABORT and send GLOBAL-COMMIT or GLOBAL-ABORT
-	n.Cycle()
-	// Consume GLOBAL-COMMIT or GLOBAL-ABORT
-	n.Cycle()
-}
-
-func (n *Network) OperationRollback(steps int) {
-	n.Coordinator.SendVoteRequestMessages("rollback", steps)
-	// Send VOTE REQUEST
-	n.Cycle()
-	// Reason about whether anyone sent VOTE-COMMIT or VOTE-ABORT and send GLOBAL-COMMIT or GLOBAL-ABORT
-	n.Cycle()
-	// Consume GLOBAL-COMMIT or GLOBAL-ABORT
-	n.Cycle()
-}

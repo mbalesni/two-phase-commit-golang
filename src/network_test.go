@@ -24,4 +24,8 @@ func TestSpawn(t *testing.T) {
 
 	network.ListHistory()
 
+	network.OperationAdd("P9")
+
+	network.ListHistory()
+
 }

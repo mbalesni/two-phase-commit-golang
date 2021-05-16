@@ -18,7 +18,13 @@ func (p *Process) SendVoteRequestMessages(operation string, transactionValue int
 	}
 
 	for _, target := range p.OtherProcesses {
-		message := p.NewFirstPhaseMessage(target, "VOTE-REQUEST", operation, transactionValue)
+		var message Message
+
+		if operation == "synchronize" {
+			message = p.NewFirstPhaseSynchronizationMessage(target, "VOTE-REQUEST", p.Log)
+		} else {
+			message = p.NewFirstPhaseMessage(target, "VOTE-REQUEST", operation, transactionValue)
+		}
 		p.SendQueue.Add(message)
 	}
 
@@ -51,6 +57,10 @@ func (p *Process) PreCommitCoordinator(operation string, value int) {
 	case "rollback":
 		{
 			p.Log = p.Log[0:(len(p.Log) - value)]
+		}
+	case "synchronize":
+		{
+			p.Log = p.Log
 		}
 	}
 
