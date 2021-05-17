@@ -1,8 +1,10 @@
 package src
 
-import log "github.com/sirupsen/logrus"
+import (
+	log "github.com/sirupsen/logrus"
+)
 
-func (p *Process) SendVoteRequestMessages(operation string, transactionValue int, processName string) {
+func (p *Process) SendVoteRequestMessages(operation string, transactionValue int, processName string, process *Process) {
 
 	for _, target := range p.OtherProcesses {
 		if target.TimeFailure {
@@ -11,20 +13,20 @@ func (p *Process) SendVoteRequestMessages(operation string, transactionValue int
 		}
 	}
 
-	p.PreCommitCoordinator(operation, transactionValue, processName)
-
 	for _, target := range p.OtherProcesses {
 		var message Message
 
 		if operation == "synchronize" {
 			message = p.NewFirstPhaseSynchronizationMessage(target, "VOTE-REQUEST", p.Log)
-		} else if operation == "remove" && target.Name != processName {
+		} else if operation == "remove" {
 			message = p.NewFirstPhaseRemoveMessage(target, "VOTE-REQUEST", processName)
 		} else {
 			message = p.NewFirstPhaseMessage(target, "VOTE-REQUEST", operation, transactionValue)
 		}
 		p.SendQueue.Add(message)
 	}
+
+	p.PreCommitCoordinator(operation, transactionValue, processName, process)
 
 	p.State = "wait"
 
@@ -36,8 +38,11 @@ func (p *Process) SendGlobalCommitMessages() {
 	p.Commit()
 
 	for _, target := range p.OtherProcesses {
+		// TODO: check commented
+		// if p.OtherProcesses[target.Name] != nil {
 		message := p.NewSecondPhaseMessage(target, "GLOBAL-COMMIT")
 		p.SendQueue.Add(message)
+		// }
 	}
 
 }
@@ -55,13 +60,13 @@ func (p *Process) SendGlobalAbortMessages() {
 }
 
 // PreCommit when the coordinator sends VoteRequest to all, then PreCommit happens.
-func (p *Process) PreCommitCoordinator(operation string, value int, processName string) {
+func (p *Process) PreCommitCoordinator(operation string, value int, processName string, process *Process) {
 
 	p.UndoLog = p.Log
-	p.UndoOtherProcesses = p.OtherProcesses
+	p.UndoOtherProcesses = MapCopy(p.OtherProcesses)
 
 	switch operation {
-	case "add":
+	case "set-value":
 		{
 			p.Log = append(p.Log, value)
 		}
@@ -71,7 +76,12 @@ func (p *Process) PreCommitCoordinator(operation string, value int, processName 
 		}
 	case "synchronize":
 		{
+			// synchronization is done through the coordinator's log
 			p.Log = p.Log
+		}
+	case "add":
+		{
+			p.OtherProcesses[processName] = process
 		}
 	case "remove":
 		{

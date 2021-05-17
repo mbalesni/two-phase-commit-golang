@@ -7,6 +7,18 @@ type Network struct {
 	Coordinator *Process
 }
 
+func (n *Network) AutoDiscovery() {
+	for _, currentProcess := range n.Processes {
+		for _, targetProcess := range n.Processes {
+			_, alreadyIn := currentProcess.OtherProcesses[targetProcess.Name]
+			if !alreadyIn && currentProcess.Name != targetProcess.Name {
+				currentProcess.OtherProcesses[targetProcess.Name] = targetProcess
+			}
+
+		}
+	}
+}
+
 func SpawnNetwork(processes []*Process) *Network {
 
 	network := Network{}
@@ -20,18 +32,6 @@ func SpawnNetwork(processes []*Process) *Network {
 
 	return &network
 
-}
-
-func (n *Network) AutoDiscovery() {
-	for _, currentProcess := range n.Processes {
-		for _, targetProcess := range n.Processes {
-			_, alreadyIn := currentProcess.OtherProcesses[targetProcess.Name]
-			if !alreadyIn && currentProcess.Name != targetProcess.Name {
-				currentProcess.OtherProcesses[targetProcess.Name] = targetProcess
-			}
-
-		}
-	}
 }
 
 func (n *Network) Cycle() {
@@ -50,6 +50,7 @@ func (n *Network) Cycle() {
 func (n *Network) ListHistory() {
 
 	log.Println("Listing history")
+	log.Printf("Cooordinator:%v", n.Coordinator.Name)
 
 	for _, process := range n.Processes {
 		log.Println(process.Name, process.Log)

@@ -17,7 +17,7 @@ type Process struct {
 	Log                     []int
 	UndoLog                 []int
 	OtherProcesses          map[string]*Process
-	UndoOtherProcesses 		map[string]*Process
+	UndoOtherProcesses      map[string]*Process
 	OtherProcessesDecisions []string
 }
 
@@ -38,17 +38,20 @@ func (p *Process) Init() {
 }
 
 // PreCommit when the coordinator sends VoteRequest to all, then PreCommit happens.
-func (p *Process) PreCommit(operation string, value int, history []int, processName string) string {
+func (p *Process) PreCommit(operation string, value int, history []int, processName string, process *Process) string {
+
+	// log.Infof("Pre")
+	// log.Println(p.Name, "precommits. Op:", operation, "Value", value, "P name", processName)
 	if p.ArbitraryFailure {
 		p.State = "init"
 		return "VOTE-ABORT"
 	}
 
 	p.UndoLog = p.Log
-	p.UndoOtherProcesses = p.OtherProcesses
+	p.UndoOtherProcesses = MapCopy(p.OtherProcesses)
 
 	switch operation {
-	case "add":
+	case "set-value":
 		{
 			p.Log = append(p.Log, value)
 		}
@@ -58,7 +61,12 @@ func (p *Process) PreCommit(operation string, value int, history []int, processN
 		}
 	case "synchronize":
 		{
+			// synchronization is done through the coordinator's log
 			p.Log = history
+		}
+	case "add":
+		{
+			p.OtherProcesses[processName] = process
 		}
 	case "remove":
 		{
@@ -101,7 +109,7 @@ func (p *Process) ProcessMessages() {
 					fmt.Println("P=", p.Name, "got a VOTE-REQUEST from", message.From.Name)
 				}
 
-				decision := p.PreCommit(message.Operation, message.TransactionValue, message.History, "")
+				decision := p.PreCommit(message.Operation, message.TransactionValue, message.History, message.ProcessName, message.Process)
 				responseMessage := p.NewMessage(message.From, decision)
 				p.SendQueue.Add(responseMessage)
 			}
@@ -112,7 +120,8 @@ func (p *Process) ProcessMessages() {
 					fmt.Println(p.Name, "got a VOTE-COMMIT from", message.From.Name)
 				}
 				if p.State != "wait" {
-					fmt.Println(p.Name, "did not request a commit. Something is wrong! State:", p.State)
+					// keep this weird if/else structure. it's magic.
+					// otherwise everything breaks
 				} else {
 					p.AddDecision(message.MessageType)
 					var commitDecisionCount int
@@ -151,7 +160,7 @@ func (p *Process) ProcessMessages() {
 					fmt.Println(p.Name, "got a GLOBAL-COMMIT from", message.From.Name)
 				}
 				if p.State != "ready" {
-					fmt.Println(p.Name, " did not wait for a global commit. Something is wrong!")
+					// fmt.Println(p.Name, " did not wait for a global commit. Something is wrong!")
 				} else {
 					p.Commit()
 				}
@@ -160,7 +169,7 @@ func (p *Process) ProcessMessages() {
 		case "GLOBAL-ABORT":
 			{
 				if p.Verbose {
-					fmt.Println(p.Name, "got a GLOBAL-ABORT from", message.From.Name)
+					// fmt.Println(p.Name, "got a GLOBAL-ABORT from", message.From.Name)
 				}
 				if p.State != "ready" {
 					fmt.Println(p.Name, " did not wait for a global abort. Something is wrong!")

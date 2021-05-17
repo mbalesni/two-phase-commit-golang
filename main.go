@@ -1,12 +1,13 @@
 package main
 
 import (
-	prompt "github.com/c-bata/go-prompt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"
 	"two-phase-program/src"
+
+	prompt "github.com/c-bata/go-prompt"
+	log "github.com/sirupsen/logrus"
 )
 
 var network *src.Network
@@ -21,7 +22,7 @@ func executor(in string) {
 
 	if whitespaceSplit[0] != "Set-value" &&
 		whitespaceSplit[0] != "Rollback" &&
-		whitespaceSplit[0] != "Add" &&
+		whitespaceSplit[0] != "Add" && // TODO: make this work
 		whitespaceSplit[0] != "Remove" &&
 		whitespaceSplit[0] != "Time-failure" &&
 		whitespaceSplit[0] != "Arbitrary-failure" &&
@@ -40,7 +41,6 @@ func executor(in string) {
 					if err != nil {
 						log.Errorf("%v", err)
 					} else {
-						log.Println("Wants to set value:", value)
 						network.OperationSetValue(value)
 						network.ListHistory()
 					}
@@ -57,8 +57,9 @@ func executor(in string) {
 					} else {
 						if len(network.Coordinator.Log) < value {
 							log.Error("the system cannot reverse to that long state")
+						} else if value < 0 {
+							log.Error("time travel is banned. Will cause a singularity. (use --force to proceed at your own risk)")
 						} else {
-							log.Println("Wants to roll back by:", value)
 							network.OperationRollback(value)
 							network.ListHistory()
 						}
@@ -74,6 +75,7 @@ func executor(in string) {
 						log.Error("Can't add process with the same name")
 					} else {
 						network.OperationAdd(whitespaceSplit[1])
+						network.OperationSync()
 						network.ListHistory()
 					}
 				}
@@ -85,8 +87,6 @@ func executor(in string) {
 				} else {
 					if network.Processes[whitespaceSplit[1]] == nil {
 						log.Error("Can't remove what's not there :|")
-					} else if network.Coordinator.Name == whitespaceSplit[1] {
-						log.Error("Can't remove the coordinator!")
 					} else {
 						network.OperationRemove(whitespaceSplit[1])
 						network.ListHistory()
