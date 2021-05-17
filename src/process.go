@@ -115,9 +115,15 @@ func (p *Process) ProcessMessages() {
 					fmt.Println(p.Name, "did not request a commit. Something is wrong! State:", p.State)
 				} else {
 					p.AddDecision(message.MessageType)
-					// TODO: fix by comparing # responses to actual # of requests instead of total # of processes
-					// or maybe actually keep it this way. Specification doesn't mention this.
-					if len(p.OtherProcessesDecisions) == len(p.OtherProcesses) {
+					var commitDecisionCount int
+
+					for _, val := range p.OtherProcessesDecisions {
+						if val == "VOTE-COMMIT" {
+							commitDecisionCount = commitDecisionCount + 1
+						}
+					}
+
+					if commitDecisionCount == len(p.OtherProcesses) {
 						p.State = "commit"
 						p.OtherProcessesDecisions = []string{}
 						p.SendGlobalCommitMessages()
@@ -133,8 +139,8 @@ func (p *Process) ProcessMessages() {
 				if p.State != "wait" {
 					fmt.Println(p.Name, "did not request an abort. Something is wrong!")
 				} else {
-					p.AddDecision(message.MessageType)
-					p.Abort()
+					p.OtherProcessesDecisions = []string{}
+					p.SendGlobalAbortMessages()
 				}
 			}
 		// Second phase messages

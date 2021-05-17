@@ -42,6 +42,18 @@ func (p *Process) SendGlobalCommitMessages() {
 
 }
 
+func (p *Process) SendGlobalAbortMessages() {
+
+	p.State = "init"
+	p.Abort()
+
+	for _, target := range p.OtherProcesses {
+		message := p.NewSecondPhaseMessage(target, "GLOBAL-ABORT")
+		p.SendQueue.Add(message)
+	}
+
+}
+
 // PreCommit when the coordinator sends VoteRequest to all, then PreCommit happens.
 func (p *Process) PreCommitCoordinator(operation string, value int, processName string) {
 
