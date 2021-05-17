@@ -1,17 +1,17 @@
 package src
 
-import "fmt"
+import log "github.com/sirupsen/logrus"
 
 func (p *Process) SendVoteRequestMessages(operation string, transactionValue int, processName string) {
 
-	p.PreCommitCoordinator(operation, transactionValue, processName)
-
 	for _, target := range p.OtherProcesses {
 		if target.TimeFailure {
-			fmt.Println("Node", target.Name, "is unreachable. Aborting.")
+			log.Println("Node", target.Name, "is unreachable. Aborting.")
 			return
 		}
 	}
+
+	p.PreCommitCoordinator(operation, transactionValue, processName)
 
 	for _, target := range p.OtherProcesses {
 		var message Message

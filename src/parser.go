@@ -2,7 +2,7 @@ package src
 
 import (
 	"bufio"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"

@@ -1,6 +1,6 @@
 package src
 
-import "fmt"
+import "log"
 
 type Network struct {
 	Processes   map[string]*Process
@@ -38,7 +38,6 @@ func (n *Network) Cycle() {
 	for _, process := range n.Processes {
 		for process.SendQueue.queue.Len() > 0 {
 			message := process.SendQueue.Pop()
-			fmt.Println(message)
 			message.To.GetQueue.Add(message)
 		}
 	}
@@ -50,9 +49,9 @@ func (n *Network) Cycle() {
 
 func (n *Network) ListHistory() {
 
-	fmt.Println("Listing history")
+	log.Println("Listing history")
 
 	for _, process := range n.Processes {
-		fmt.Println(process.Name, process.Log)
+		log.Println(process.Name, process.Log)
 	}
 }
