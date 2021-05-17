@@ -29,6 +29,10 @@ func (n *Network) OperationAdd(processName string) {
 
 	newProcess := NewProcess(processName, false)
 
+	n.Processes[newProcess.Name] = newProcess
+
+	n.AutoDiscovery()
+
 	n.Coordinator.SendVoteRequestMessages("synchronize", 0, processName)
 	// Send VOTE REQUEST
 	n.Cycle()
@@ -37,9 +41,9 @@ func (n *Network) OperationAdd(processName string) {
 	// Consume GLOBAL-COMMIT or GLOBAL-ABORT
 	n.Cycle()
 
-	n.Processes[newProcess.Name] = newProcess
-
-	n.AutoDiscovery()
+	if n.Coordinator.UndoOtherProcesses[processName] == nil {
+		delete(n.Processes, processName)
+	}
 }
 
 func (n *Network) OperationRemove(processName string) {

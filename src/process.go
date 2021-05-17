@@ -72,9 +72,9 @@ func (p *Process) PreCommit(operation string, value int, history []int, processN
 
 // Commit when commiting we do not rollback the changes and instead only delete the undo log.
 func (p *Process) Commit() {
+	p.State = "init"
 	p.UndoLog = nil
 	p.UndoOtherProcesses = nil
-	p.State = "init"
 }
 
 // Abort when aborting we rollback the changes and go back to the "init" stage
