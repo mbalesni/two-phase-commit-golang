@@ -1,6 +1,7 @@
 package src
 
 import (
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -30,8 +31,6 @@ func (n *Network) OperationAdd(processName string) {
 
 	newProcess := NewProcess(processName, false)
 
-	n.Processes[newProcess.Name] = newProcess
-
 	n.Coordinator.SendVoteRequestMessages("add", 0, processName, newProcess)
 	// Send VOTE REQUEST
 	n.Cycle()
@@ -40,9 +39,12 @@ func (n *Network) OperationAdd(processName string) {
 	// Consume GLOBAL-COMMIT or GLOBAL-ABORT
 	n.Cycle()
 
-	if n.Coordinator.OtherProcesses[processName] == nil {
-		delete(n.Processes, processName)
+	fmt.Println("State:", n.Coordinator.State)
+
+	if n.Coordinator.State == "commit" {
+		n.Processes[newProcess.Name] = newProcess
 	}
+
 }
 
 func (n *Network) OperationSync() {
@@ -56,7 +58,6 @@ func (n *Network) OperationSync() {
 	n.Cycle()
 }
 
-// TODO: if we remove coordinator, we need to choose a new one
 func (n *Network) OperationRemove(processName string) {
 	n.Coordinator.SendVoteRequestMessages("remove", 0, processName, nil)
 	// Send VOTE REQUEST
@@ -66,16 +67,16 @@ func (n *Network) OperationRemove(processName string) {
 	// Consume GLOBAL-COMMIT or GLOBAL-ABORT
 	n.Cycle()
 
-	if n.Coordinator.OtherProcesses[processName] == nil {
-		delete(n.Processes, processName)
-	}
-
-	if processName == n.Coordinator.Name {
+	if n.Coordinator.State == "commit" {
 		delete(n.Processes, processName)
 
-		for _, process := range n.Processes {
-			n.Coordinator = process
-			break
+		if processName == n.Coordinator.Name {
+			// choose a new coordinator
+			for _, process := range n.Processes {
+				n.Coordinator = process
+				log.Infof("Updated cooordinator to: %v", n.Coordinator.Name)
+				break
+			}
 		}
 	}
 

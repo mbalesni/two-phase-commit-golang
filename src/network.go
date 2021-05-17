@@ -1,6 +1,8 @@
 package src
 
-import "log"
+import (
+	log "github.com/sirupsen/logrus"
+)
 
 type Network struct {
 	Processes   map[string]*Process
@@ -49,10 +51,7 @@ func (n *Network) Cycle() {
 
 func (n *Network) ListHistory() {
 
-	log.Println("Listing history")
-	log.Printf("Cooordinator:%v", n.Coordinator.Name)
-
 	for _, process := range n.Processes {
-		log.Println(process.Name, process.Log)
+		log.Info(process.Name, " Log: ", process.Log)
 	}
 }

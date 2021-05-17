@@ -22,7 +22,7 @@ func executor(in string) {
 
 	if whitespaceSplit[0] != "Set-value" &&
 		whitespaceSplit[0] != "Rollback" &&
-		whitespaceSplit[0] != "Add" && // TODO: make this work
+		whitespaceSplit[0] != "Add" &&
 		whitespaceSplit[0] != "Remove" &&
 		whitespaceSplit[0] != "Time-failure" &&
 		whitespaceSplit[0] != "Arbitrary-failure" &&

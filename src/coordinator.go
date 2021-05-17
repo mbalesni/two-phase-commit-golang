@@ -28,28 +28,21 @@ func (p *Process) SendVoteRequestMessages(operation string, transactionValue int
 
 	p.PreCommitCoordinator(operation, transactionValue, processName, process)
 
-	p.State = "wait"
-
 }
 
 func (p *Process) SendGlobalCommitMessages() {
 
-	p.State = "init"
 	p.Commit()
 
 	for _, target := range p.OtherProcesses {
-		// TODO: check commented
-		// if p.OtherProcesses[target.Name] != nil {
 		message := p.NewSecondPhaseMessage(target, "GLOBAL-COMMIT")
 		p.SendQueue.Add(message)
-		// }
 	}
 
 }
 
 func (p *Process) SendGlobalAbortMessages() {
 
-	p.State = "init"
 	p.Abort()
 
 	for _, target := range p.OtherProcesses {
@@ -62,6 +55,7 @@ func (p *Process) SendGlobalAbortMessages() {
 // PreCommit when the coordinator sends VoteRequest to all, then PreCommit happens.
 func (p *Process) PreCommitCoordinator(operation string, value int, processName string, process *Process) {
 
+	p.State = "wait"
 	p.UndoLog = p.Log
 	p.UndoOtherProcesses = MapCopy(p.OtherProcesses)
 

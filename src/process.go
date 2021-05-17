@@ -3,6 +3,8 @@ package src
 import (
 	"fmt"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Process struct {
@@ -43,7 +45,7 @@ func (p *Process) PreCommit(operation string, value int, history []int, processN
 	// log.Infof("Pre")
 	// log.Println(p.Name, "precommits. Op:", operation, "Value", value, "P name", processName)
 	if p.ArbitraryFailure {
-		p.State = "init"
+		p.State = "abort"
 		return "VOTE-ABORT"
 	}
 
@@ -80,14 +82,14 @@ func (p *Process) PreCommit(operation string, value int, history []int, processN
 
 // Commit when commiting we do not rollback the changes and instead only delete the undo log.
 func (p *Process) Commit() {
-	p.State = "init"
+	p.State = "commit"
 	p.UndoLog = nil
 	p.UndoOtherProcesses = nil
 }
 
-// Abort when aborting we rollback the changes and go back to the "init" stage
+// Abort when aborting we rollback the changes and go to the "abort" stage
 func (p *Process) Abort() {
-	p.State = "init"
+	p.State = "abort"
 	p.Log = p.UndoLog
 	p.UndoLog = nil
 	if p.UndoOtherProcesses != nil {
@@ -132,8 +134,8 @@ func (p *Process) ProcessMessages() {
 						}
 					}
 
-					if commitDecisionCount == len(p.OtherProcesses) {
-						p.State = "commit"
+					if commitDecisionCount == len(p.UndoOtherProcesses) {
+						log.Infof("Operation commited successfully!")
 						p.OtherProcessesDecisions = []string{}
 						p.SendGlobalCommitMessages()
 					}
@@ -146,8 +148,9 @@ func (p *Process) ProcessMessages() {
 					fmt.Println(p.Name, "got a VOTE-ABORT from", message.From.Name)
 				}
 				if p.State != "wait" {
-					fmt.Println(p.Name, "did not request an abort. Something is wrong!")
+					// fmt.Println(p.Name, "did not request an abort. Something is wrong!")
 				} else {
+					log.Errorln("Operation aborted by:", message.From.Name)
 					p.OtherProcessesDecisions = []string{}
 					p.SendGlobalAbortMessages()
 				}
@@ -169,10 +172,10 @@ func (p *Process) ProcessMessages() {
 		case "GLOBAL-ABORT":
 			{
 				if p.Verbose {
-					// fmt.Println(p.Name, "got a GLOBAL-ABORT from", message.From.Name)
+					fmt.Println(p.Name, "got a GLOBAL-ABORT from", message.From.Name)
 				}
 				if p.State != "ready" {
-					fmt.Println(p.Name, " did not wait for a global abort. Something is wrong!")
+					// fmt.Println(p.Name, " did not wait for a global abort. Something is wrong!")
 				} else {
 					p.Abort()
 				}
