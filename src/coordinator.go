@@ -6,7 +6,7 @@ func (p *Process) SendVoteRequestMessages(operation string, transactionValue int
 
 	for _, target := range p.OtherProcesses {
 		if target.TimeFailure {
-			log.Println("Node", target.Name, "is unreachable. Aborting.")
+			log.Errorf("Node %v is unreachable. Aborting.", target.Name)
 			return
 		}
 	}

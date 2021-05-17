@@ -27,7 +27,7 @@ func executor(in string) {
 		whitespaceSplit[0] != "Arbitrary-failure" &&
 		whitespaceSplit[0] != "List" {
 
-		log.Println("Invalid command")
+		log.Error("Invalid command")
 
 	} else {
 		switch command := whitespaceSplit[0]; command {
