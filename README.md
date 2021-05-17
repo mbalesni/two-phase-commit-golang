@@ -3,31 +3,6 @@
 ## Resources
 - [Task Specification](https://courses.cs.ut.ee/LTAT.06.007/2021_spring/uploads/Main/Task3-2021.pdf)
 - Two-Phase Commit protocol (2PC): [Lecture 13](https://courses.cs.ut.ee/LTAT.06.007/2021_spring/uploads/Main/Lecture12-2021.pdf)
-## Plan
-
-What's implemented:
-
-- [X] Process Class (simulated, not actual multiprocessing)
-- [X] Inter-process communication
-- [X] Core Commit Process (see `network_test.go`)
-- [ ] Synchronization after node failure
-- [ ] Operations
-  - [X] Set-Value
-  - [X] Rollback
-  - [ ] Add
-  - [ ] Remove
-  - [ ] Time-failure
-  - [ ] Arbitraty-failure
-- [ ] Error messages
-- [ ] Loading from file
-- [ ] CLI 
-
-## Run tests
-
-```bash
-cd src
-go test
-```
 
 ## How to run
 
@@ -41,7 +16,7 @@ two-phase-program 2PC.txt
 
 To compile the program yourself:
 
-1. Install Golang 1.15.5 from [here](https://golang.org/dl/#go1.15.5)
+1. Install Golang 1.15.10 from [here](https://golang.org/dl/#go1.15.10)
 2. Run in the project directory :
 ```bash
 go build 

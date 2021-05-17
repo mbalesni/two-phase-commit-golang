@@ -1,5 +1,10 @@
 package src
 
+import (
+	log "github.com/sirupsen/logrus"
+	"time"
+)
+
 func (n *Network) OperationSetValue(value int) {
 	n.Coordinator.SendVoteRequestMessages("add", value, "")
 	// Send VOTE REQUEST
@@ -49,5 +54,41 @@ func (n *Network) OperationRemove(processName string) {
 	if n.Coordinator.UndoOtherProcesses[processName] == nil {
 		delete(n.Processes, processName)
 	}
+}
+
+func (n *Network) OperationSetTimeFailure(processName string, seconds int) {
+	n.Processes[processName].TimeFailure = true
+
+	timer := time.NewTimer(time.Duration(seconds) * time.Second)
+
+	go func() {
+		for {
+			select {
+			case <-timer.C:
+				{
+					log.Println("Time failure expired")
+					n.Processes[processName].TimeFailure = false
+				}
+			}
+		}
+	}()
+}
+
+func (n *Network) OperationSetArbitraryFailure(processName string, seconds int) {
+	n.Processes[processName].ArbitraryFailure = true
+
+	timer := time.NewTimer(time.Duration(seconds) * time.Second)
+
+	go func() {
+		for {
+			select {
+			case <-timer.C:
+				{
+					log.Println("Arbitrary failure expired")
+					n.Processes[processName].ArbitraryFailure = false
+				}
+			}
+		}
+	}()
 }
 

@@ -29,8 +29,3 @@ func (p *Process) NewFirstPhaseRemoveMessage(to *Process, messageType string, pr
 func (p *Process) NewSecondPhaseMessage(to *Process, messageType string) Message {
 	return Message{From: p, To: to, MessageType: messageType}
 }
-/*
-func (p *Process) NewRecoveryMessage(to *Process, messageType string, transactionValue int, history []int) Message {
-	return Message{From: p, To: to, MessageType: messageType, TransactionValue: transactionValue, History: history}
-}
-*/

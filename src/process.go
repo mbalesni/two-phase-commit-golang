@@ -134,6 +134,7 @@ func (p *Process) ProcessMessages() {
 					fmt.Println(p.Name, "did not request an abort. Something is wrong!")
 				} else {
 					p.AddDecision(message.MessageType)
+					p.Abort()
 				}
 			}
 		// Second phase messages
